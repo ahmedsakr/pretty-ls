@@ -1,17 +1,7 @@
-use structopt::StructOpt;
-
-#[derive(StructOpt, Debug)]
-#[structopt(name = "pretty-ls")]
-struct Opt {
-
-    /// Turns on debugging
-    #[structopt(short, long)]
-    debug: bool
-
-}
+mod args;
 
 // Entry point for the pls program
 fn main() {
-    let opt = Opt::from_args();
-    println!("{:#?}", opt);
+    let opt = args::RuntimeOptions::gather();
+    println!("Debug: {}", opt.is_debug());
 }
