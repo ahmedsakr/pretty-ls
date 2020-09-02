@@ -79,10 +79,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "pls-sys"
+version = "0.1.0"
+
+[[package]]
 name = "pretty-ls"
 version = "0.1.0"
 dependencies = [
  "pls-args",
+ "pls-sys",
 ]
 
 [[package]]

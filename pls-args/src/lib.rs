@@ -1,40 +1,17 @@
-// This module is intended to abstract away the structopt
-// crate logic.
-
-use structopt::StructOpt;
-
-#[derive(StructOpt, Debug)]
-#[structopt(name = "pretty-ls")]
-pub struct PLSOptions {
-
-    /// Turns on debugging
-    #[structopt(short, long)]
-    pub debug: bool,
-
-    /// Color-codes files by type
-    #[structopt(short, long)]
-    pub colorcode: bool
-}
-
-impl PLSOptions {
-
-    pub fn init() -> PLSOptions {
-        PLSOptions::from_args()
-    }
-}
+mod supported_arguments;
+use supported_arguments::PLSArguments;
 
 #[derive(Debug)]
 pub struct RuntimeArguments {
-    options: PLSOptions
+    options: PLSArguments,
 }
 
 impl RuntimeArguments {
-
     // Associated function to derive the runtime options
-    // through PLSOptions (which uses structopt)
+    // through PLSArguments (which uses structopt)
     pub fn gather() -> RuntimeArguments {
         RuntimeArguments {
-            options: PLSOptions::init()
+            options: PLSArguments::init(),
         }
     }
 
@@ -42,4 +19,4 @@ impl RuntimeArguments {
     pub fn is_debug(&self) -> bool {
         self.options.debug
     }
-} 
+}
