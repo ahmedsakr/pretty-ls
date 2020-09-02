@@ -6,6 +6,9 @@ use structopt::StructOpt;
 #[derive(StructOpt, Debug)]
 #[structopt(name = "pretty-ls")]
 pub struct PLSArguments {
+    /// Directory to look into
+    pub dir: Option<String>,
+
     /// Turns on debugging
     #[structopt(short, long)]
     pub debug: bool,

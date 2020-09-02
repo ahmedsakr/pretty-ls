@@ -19,4 +19,9 @@ impl RuntimeArguments {
     pub fn is_debug(&self) -> bool {
         self.options.debug
     }
+
+    // Directory to work on
+    pub fn directory(&self) -> Option<&String> {
+        self.options.dir.as_ref()
+    }
 }

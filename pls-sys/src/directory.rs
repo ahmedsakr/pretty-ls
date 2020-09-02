@@ -3,10 +3,15 @@ use std::process::Command;
 use std::str;
 
 // Lists the content of the current working directory
-pub fn list_dir() -> Result<Vec<String>, io::Error> {
-    let out = Command::new("ls")
-        .arg(format!("{}", get_current_dir()?.to_string()))
-        .output()?;
+pub fn list_dir(dir: Option<&String>) -> Result<Vec<String>, io::Error> {
+    let out = match dir {
+        Some(directory) => Command::new("ls").arg(directory).output()?,
+
+        // Use the current working directory by default
+        None => Command::new("ls")
+            .arg(get_current_dir()?.to_string())
+            .output()?,
+    };
 
     let files = str::from_utf8(&out.stdout)
         .expect("Failed to decode")
