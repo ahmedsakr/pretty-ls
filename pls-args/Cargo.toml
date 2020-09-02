@@ -1,15 +1,10 @@
 [package]
-name = "pretty-ls"
+name = "pls-args"
 version = "0.1.0"
 authors = ["Ahmed Sakr <ahmed@sakr.ca>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[workspace]
-members = [
-    "pls-args"
-]
-
 [dependencies]
-pls-args = { path = "./pls-args" }
+structopt="0.3.16"

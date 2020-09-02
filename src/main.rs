@@ -1,9 +1,7 @@
-mod args;
-
-use args::RuntimeOptions;
+use pls_args::RuntimeArguments;
 
 // Entry point for the pls program
 fn main() {
-    let opt = RuntimeOptions::gather();
+    let opt = RuntimeArguments::gather();
     println!("Debug: {}", opt.is_debug());
 }
