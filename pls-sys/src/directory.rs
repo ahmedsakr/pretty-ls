@@ -27,7 +27,7 @@ pub fn list_dir(dir: Option<&String>) -> Result<Vec<String>, io::Error> {
 // Parses the absolute path of the current directory
 fn get_current_dir() -> Result<String, io::Error> {
     let out = Command::new("pwd").output()?;
-    let dir = String::from(str::from_utf8(&out.stdout).expect("Failed to decode"));
+    let dir = str::from_utf8(&out.stdout).expect("Failed to decode");
 
     let new_line_index = dir
         .chars()
