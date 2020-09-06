@@ -1,10 +1,10 @@
-use std::io::{Error as IOError, ErrorKind};
+use std::io;
 use std::str;
 
 use crate::command::{self, SystemCommand};
 
 // Lists the content of the current working directory
-pub fn list_dir(dir: Option<&String>) -> Result<Vec<String>, IOError> {
+pub fn list_dir(dir: Option<&String>) -> io::Result<Vec<String>> {
     let current_dir = get_current_dir()?;
 
     let command = command::Command {
@@ -17,24 +17,19 @@ pub fn list_dir(dir: Option<&String>) -> Result<Vec<String>, IOError> {
     };
 
     let out = command.run()?;
+    let files = str::from_utf8(&out.stdout)
+        .expect("Failed to decode")
+        .lines();
 
-    if let Some(0) = out.status.code() {
-        let files = str::from_utf8(&out.stdout)
-            .expect("Failed to decode")
-            .lines();
+    // Must convert vector Lines to a vector of Strings
+    let mut files_str: Vec<String> = Vec::new();
+    files.for_each(|file| files_str.push(file.to_string()));
 
-        // Must convert vector Lines to a vector of Strings
-        let mut files_str: Vec<String> = Vec::new();
-        files.for_each(|file| files_str.push(file.to_string()));
-
-        return Ok(files_str);
-    }
-
-    Err(IOError::new(ErrorKind::InvalidData, "ls failed"))
+    Ok(files_str)
 }
 
 // Parses the absolute path of the current directory
-fn get_current_dir() -> Result<String, IOError> {
+fn get_current_dir() -> io::Result<String> {
     let out = command::Command::new("pwd").run()?;
     let dir = str::from_utf8(&out.stdout).expect("Failed to decode");
 

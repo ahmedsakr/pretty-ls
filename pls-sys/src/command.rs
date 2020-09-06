@@ -1,4 +1,4 @@
-use std::io;
+use std::io::{self, Error, ErrorKind};
 use std::process;
 
 pub trait SystemCommand {
@@ -39,6 +39,10 @@ impl<'a> SystemCommand for Command<'a> {
         }
 
         // Execute and return the command output
-        command.output()
+        let out = command.output().expect(&format!("Unable to execute {cmd}!", cmd = self.name));
+        match out.status.code() {
+            Some(0) => Ok(out),
+            _ => Err(Error::new(ErrorKind::InvalidData, format!("{cmd} failed", cmd = self.name)))
+        }
     }
 }
