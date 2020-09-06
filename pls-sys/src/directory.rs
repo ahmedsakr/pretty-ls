@@ -4,16 +4,11 @@ use crate::command::{self, SimpleCommand};
 
 // Lists the content of the current working directory
 pub fn list_dir(dir: Option<&String>) -> io::Result<Vec<String>> {
-    let current_dir = get_current_dir()?;
-
-    let command = command::SystemCommand {
-        name: "ls",
-        arguments: match dir {
-            Some(x) => Some(x),
-            // Use working directory if a path has not been provided.
-            None => Some(&current_dir),
-        },
-    };
+    let mut command = command::SystemCommand::new("ls");
+    command.add_argument(match dir {
+        Some(val) => Some(val.to_string()),
+        None => Some(get_current_dir()?),
+    });
 
     let out = command.run()?;
     let files = out.lines();
