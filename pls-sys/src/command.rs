@@ -1,31 +1,31 @@
 use std::io::{self, Error, ErrorKind};
 use std::process;
 
-pub trait SystemCommand {
+pub trait SimpleCommand {
     // Executes the command, returning the io::Result for the
-    // system command.
+    // command.
     fn run(&self) -> io::Result<process::Output>;
 }
 
-pub struct Command<'a> {
+pub struct SystemCommand<'a> {
     // The executable name
     pub name: &'a str,
     // Everything else specified after executable name
     pub arguments: Option<&'a str>,
 }
 
-impl<'a> Command<'a> {
+impl<'a> SystemCommand<'a> {
     // Associated function to initialize a command with
     // no arguments.
-    pub fn new(name: &'a str) -> Command {
-        Command {
+    pub fn new(name: &'a str) -> SystemCommand {
+        SystemCommand {
             name,
             arguments: None,
         }
     }
 }
 
-impl<'a> SystemCommand for Command<'a> {
+impl<'a> SimpleCommand for SystemCommand<'a> {
     // Runs the command by constructing the qualified command
     // from the command name and arguments.
     fn run(&self) -> io::Result<process::Output> {
@@ -38,11 +38,19 @@ impl<'a> SystemCommand for Command<'a> {
             }
         }
 
-        // Execute and return the command output
-        let out = command.output().expect(&format!("Unable to execute {cmd}!", cmd = self.name));
+        // Grab the command output
+        let out = command
+            .output()
+            .expect(&format!("Unable to execute {cmd}!", cmd = self.name));
+
         match out.status.code() {
             Some(0) => Ok(out),
-            _ => Err(Error::new(ErrorKind::InvalidData, format!("{cmd} failed", cmd = self.name)))
+
+            // Everything that isn't a 0 return value is considered as a failure.
+            _ => Err(Error::new(
+                ErrorKind::InvalidData,
+                format!("{cmd} failed", cmd = self.name),
+            )),
         }
     }
 }
