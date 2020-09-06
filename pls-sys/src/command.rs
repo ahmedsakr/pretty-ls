@@ -2,9 +2,9 @@ use std::io::{self, Error, ErrorKind};
 use std::process;
 
 pub trait SimpleCommand {
-    // Executes the command, returning the io::Result for the
+    // Executes the command, returning the standad output for the
     // command.
-    fn run(&self) -> io::Result<process::Output>;
+    fn run(&self) -> io::Result<String>;
 }
 
 pub struct SystemCommand<'a> {
@@ -28,7 +28,7 @@ impl<'a> SystemCommand<'a> {
 impl<'a> SimpleCommand for SystemCommand<'a> {
     // Runs the command by constructing the qualified command
     // from the command name and arguments.
-    fn run(&self) -> io::Result<process::Output> {
+    fn run(&self) -> io::Result<String> {
         let mut command = process::Command::new(&self.name);
 
         if let Some(args) = &self.arguments {
@@ -44,7 +44,7 @@ impl<'a> SimpleCommand for SystemCommand<'a> {
             .expect(&format!("Unable to execute {cmd}!", cmd = self.name));
 
         match out.status.code() {
-            Some(0) => Ok(out),
+            Some(0) => Ok(String::from_utf8(out.stdout).expect("Failed to decode utf-8")),
 
             // Everything that isn't a 0 return value is considered as a failure.
             _ => Err(Error::new(

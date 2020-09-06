@@ -1,5 +1,4 @@
 use std::io;
-use std::str;
 
 use crate::command::{self, SimpleCommand};
 
@@ -17,9 +16,7 @@ pub fn list_dir(dir: Option<&String>) -> io::Result<Vec<String>> {
     };
 
     let out = command.run()?;
-    let files = str::from_utf8(&out.stdout)
-        .expect("Failed to decode")
-        .lines();
+    let files = out.lines();
 
     // Must convert vector Lines to a vector of Strings
     let mut files_str: Vec<String> = Vec::new();
@@ -31,13 +28,7 @@ pub fn list_dir(dir: Option<&String>) -> io::Result<Vec<String>> {
 // Parses the absolute path of the current directory
 fn get_current_dir() -> io::Result<String> {
     let out = command::SystemCommand::new("pwd").run()?;
-    let dir = str::from_utf8(&out.stdout).expect("Failed to decode");
+    let current_dir = out.lines().next().expect("pwd failed");
 
-    let new_line_index = dir
-        .chars()
-        // Snip the string at the end of the line to retain the path only
-        .position(|c| c == '\n')
-        .expect("Bad output from ls");
-
-    Ok(dir[..new_line_index].to_string())
+    Ok(String::from(current_dir))
 }
