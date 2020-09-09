@@ -9,7 +9,7 @@ fn main() {
     let output = pls_sys::list_dir(opt.directory()).expect("Unable to list directory files");
 
     for file in &output {
-        print!("{}\t", file);
+        print!("{}  ", file);
     }
 
     println!();

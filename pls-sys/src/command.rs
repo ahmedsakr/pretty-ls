@@ -45,14 +45,9 @@ impl<'a> SimpleCommand for SystemCommand<'a> {
     fn run(&self) -> io::Result<Vec<String>> {
         let mut command = process::Command::new(&self.name);
 
-        if !self.arguments.is_empty() {
-            for arg in &self.arguments {
-                command.arg(arg);
-            }
-        }
-
         // Grab the command output
         let out = command
+            .args(&self.arguments)
             .output()
             .expect(&format!("Unable to execute {cmd}!", cmd = self.name));
 
