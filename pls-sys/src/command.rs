@@ -1,5 +1,6 @@
 use std::io::{self, Error, ErrorKind};
 use std::process;
+use std::string::FromUtf8Error;
 
 pub trait SimpleCommand {
     // Adds an argument to the chain of arguments for this command.
@@ -27,15 +28,14 @@ impl<'a> SystemCommand<'a> {
         }
     }
     // Transforms raw stdout byte vector into a vector of Strings.
-    fn parse_stdout(&self, raw_bytes: Vec<u8>) -> Vec<String> {
+    fn parse_stdout(&self, raw_bytes: Vec<u8>) -> Result<Vec<String>, FromUtf8Error> {
         let mut stdout: Vec<String> = Vec::new();
-        let raw_output = String::from_utf8(raw_bytes).expect("Failed to decode utf-8");
 
-        raw_output
+        String::from_utf8(raw_bytes)?
             .lines()
             .for_each(|line| stdout.push(line.to_string()));
 
-        stdout
+        Ok(stdout)
     }
 }
 
@@ -57,7 +57,9 @@ impl<'a> SimpleCommand for SystemCommand<'a> {
             .expect(&format!("Unable to execute {cmd}!", cmd = self.name));
 
         match out.status.code() {
-            Some(0) => Ok(self.parse_stdout(out.stdout)),
+            Some(0) => Ok(self
+                .parse_stdout(out.stdout)
+                .expect("Failed to parse stdout")),
 
             // Everything that isn't a 0 return value is considered as a failure.
             _ => Err(Error::new(
