@@ -9,9 +9,11 @@ edition = "2018"
 [workspace]
 members = [
     "pls-args",
-    "pls-sys"
+    "pls-sys",
+    "pls-classifier"
 ]
 
 [dependencies]
 pls-args = { path = "./pls-args" }
 pls-sys = { path = "./pls-sys" }
+pls-classifier = { path = "./pls-classifier" }
