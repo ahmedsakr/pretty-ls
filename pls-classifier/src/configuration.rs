@@ -1,6 +1,5 @@
 use std::env;
 use std::fs;
-use std::io::ErrorKind;
 use std::path::Path;
 
 pub fn init() {
@@ -9,10 +8,7 @@ pub fn init() {
 
     if !conf_dir.exists() {
         match fs::create_dir(conf_dir) {
-            Err(err) => match err.kind() {
-                ErrorKind::AlreadyExists => (),
-                _ => panic!("Failed to initialize configuration: {}", err),
-            },
+            Err(err) => panic!("Failed to initialize configuration: {}", err),
             Ok(_) => (),
         }
     }
