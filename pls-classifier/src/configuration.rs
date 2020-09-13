@@ -4,7 +4,8 @@ use std::io::{self, Write};
 use std::path::Path;
 
 enum ConfigurationEntry {
-    Entry(String, String),
+    Pair(String, String),
+    Flag(String),
 }
 
 pub fn init() {
@@ -20,32 +21,42 @@ pub fn init() {
     let path = Path::new(&pls_conf);
     if !path.exists() {
         fs::File::create(path).expect("Unable to create conf file");
+        write_default_configuration().expect("");
     }
-
-    write_default_configuration().expect("");
 }
 
 fn get_default_configuration() -> Vec<ConfigurationEntry> {
     let mut config = Vec::new();
-    config.push(ConfigurationEntry::Entry("*.js".to_string(), "yellow".to_string()));
-    config.push(ConfigurationEntry::Entry("*.java".to_string(), "orange".to_string()));
+    config.push(ConfigurationEntry::Pair(
+        "*.js".to_string(),
+        "yellow".to_string(),
+    ));
+    config.push(ConfigurationEntry::Pair(
+        "*.java".to_string(),
+        "orange".to_string(),
+    ));
+    config.push(ConfigurationEntry::Flag("no_permissions".to_string()));
 
     config
 }
 
-fn write_default_configuration() -> io::Result<()>{
+fn write_default_configuration() -> io::Result<()> {
     let pls_conf = format!("{}/.pls/conf", env::var("HOME").unwrap());
     let mut file = fs::File::create(&pls_conf)?;
 
     let config = get_default_configuration();
     for entry in &config {
         match entry {
-            ConfigurationEntry::Entry(key, value) => {
-                file.write(format!("{}={}", key, value).as_bytes()).expect("");
+            ConfigurationEntry::Pair(key, value) => {
+                file.write(format!("{}={}", key, value).as_bytes())?;
+            }
+            ConfigurationEntry::Flag(flag) => {
+                file.write(flag.as_bytes())?;
             }
         }
 
-        file.write("\n".as_bytes()).expect("");
+        file.write("\n".as_bytes())?;
     }
+
     Ok(())
 }
