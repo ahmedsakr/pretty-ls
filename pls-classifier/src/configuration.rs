@@ -21,46 +21,70 @@ impl Display for ConfigurationEntry {
     }
 }
 
-pub fn init() {
-    let pls_conf = format!("{}/.pls/conf", env::var("HOME").unwrap());
-
-    // Check for pls conf dir
-    let path = Path::new(&pls_conf).parent().unwrap();
-    if !path.exists() {
-        fs::create_dir(path).expect("Failed to initialize conf dir");
-    }
-
-    // Check for pls conf file
-    let path = Path::new(&pls_conf);
-    if !path.exists() {
-        write_default_configuration().expect("Unable to create conf file");
-    }
+pub struct Configuration {
+    absolute_path: String,
+    entries: Vec<ConfigurationEntry>,
 }
 
-fn get_default_configuration() -> Vec<ConfigurationEntry> {
-    let mut config = Vec::new();
-    config.push(ConfigurationEntry::Pair(
-        "*.js".to_string(),
-        "yellow".to_string(),
-    ));
-    config.push(ConfigurationEntry::Pair(
-        "*.java".to_string(),
-        "orange".to_string(),
-    ));
-    config.push(ConfigurationEntry::Flag("no_permissions".to_string()));
+impl Configuration {
+    // This constructor pulls the configuration file into the program
+    //
+    // If the configuration file or directory do not exist, this constructor
+    // will silent create the appropriate hierarchy with the default configuration.
+    pub fn new() -> Configuration {
+        let mut instance = Configuration {
+            absolute_path: format!("{}/.pls/conf", env::var("HOME").unwrap()),
+            entries: Vec::new(),
+        };
 
-    config
-}
+        // Pull the configuration from the filesystem.
+        instance.init();
 
-fn write_default_configuration() -> io::Result<()> {
-    let pls_conf = format!("{}/.pls/conf", env::var("HOME").unwrap());
-    let mut file = File::create(&pls_conf)?;
-
-    let config = get_default_configuration();
-    for entry in &config {
-        file.write(entry.to_string().as_bytes())?;
-        file.write("\n".as_bytes())?;
+        instance
     }
+    // Probes the configuration directory and file before we can read
+    // the data. If the configuration file does not exist, a default
+    // configuration file is generated.
+    fn init(&mut self) {
+        // Check for pls conf dir
+        let conf_dir = Path::new(&self.absolute_path).parent().unwrap();
+        if !conf_dir.exists() {
+            fs::create_dir(conf_dir).expect("Failed to initialize conf dir");
+        }
 
-    Ok(())
+        // Generate a default configuration file if it doesn't exist
+        if !Path::new(&self.absolute_path).exists() {
+            self.load_default_configuration()
+                .expect("Unable to create conf file");
+        }
+    }
+    // Loads the default values into the struct vector, and automatically
+    // syncs the data into the configuration file for long-term storage.
+    fn load_default_configuration(&mut self) -> io::Result<()> {
+        self.entries.push(ConfigurationEntry::Pair(
+            "*.js".to_string(),
+            "yellow".to_string(),
+        ));
+        self.entries.push(ConfigurationEntry::Pair(
+            "*.java".to_string(),
+            "orange".to_string(),
+        ));
+        self.entries
+            .push(ConfigurationEntry::Flag("no_permissions".to_string()));
+
+        // Final step is to sync with the configuration file.
+        self.sync()?;
+        Ok(())
+    }
+    // Write the configuration in memory into the configuration file.
+    fn sync(&self) -> io::Result<()> {
+        let mut file = File::create(&self.absolute_path)?;
+
+        for entry in &self.entries {
+            file.write(entry.to_string().as_bytes())?;
+            file.write("\n".as_bytes())?;
+        }
+
+        Ok(())
+    }
 }

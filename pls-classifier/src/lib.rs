@@ -1,6 +1,8 @@
 mod configuration;
 mod lookup;
 
+use configuration::Configuration;
+
 pub fn init() {
-    configuration::init();
+    let _conf = Configuration::new();
 }
