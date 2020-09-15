@@ -31,21 +31,19 @@ impl Configuration {
     //
     // If the configuration file or directory do not exist, this constructor
     // will silent create the appropriate hierarchy with the default configuration.
-    pub fn new() -> Configuration {
-        let mut instance = Configuration {
+    pub fn new() -> Self {
+        let instance = Self {
             absolute_path: format!("{}/.pls/conf", env::var("HOME").unwrap()),
             entries: Vec::new(),
         };
 
         // Pull the configuration from the filesystem.
-        instance.init();
-
-        instance
+        instance.init()
     }
     // Probes the configuration directory and file before we can read
     // the data. If the configuration file does not exist, a default
     // configuration file is generated.
-    fn init(&mut self) {
+    fn init(mut self) -> Self {
         // Check for pls conf dir
         let conf_dir = Path::new(&self.absolute_path).parent().unwrap();
         if !conf_dir.exists() {
@@ -57,6 +55,8 @@ impl Configuration {
             self.load_default_configuration()
                 .expect("Unable to create conf file");
         }
+
+        self
     }
     // Loads the default values into the struct vector, and automatically
     // syncs the data into the configuration file for long-term storage.
@@ -73,8 +73,7 @@ impl Configuration {
             .push(ConfigurationEntry::Flag("no_permissions".to_string()));
 
         // Final step is to sync with the configuration file.
-        self.sync()?;
-        Ok(())
+        self.sync()
     }
     // Write the configuration in memory into the configuration file.
     fn sync(&self) -> io::Result<()> {
