@@ -2,6 +2,7 @@ use std::env;
 use std::fmt::{self, Display};
 use std::fs::{self, File};
 use std::io::{self, Write};
+use std::ops::Drop;
 use std::path::Path;
 use std::string::ToString;
 
@@ -85,5 +86,12 @@ impl Configuration {
         }
 
         Ok(())
+    }
+}
+
+impl Drop for Configuration {
+    // Persist memory configuration to file before dropping.
+    fn drop(&mut self) {
+        self.sync().expect("Unable to sync configuration file");
     }
 }
