@@ -6,6 +6,8 @@ use std::ops::Drop;
 use std::path::Path;
 use std::string::ToString;
 
+use regex::Regex;
+
 enum ConfigurationEntry {
     Pair(String, String),
     Flag(String),
@@ -18,6 +20,24 @@ impl Display for ConfigurationEntry {
         match self {
             ConfigurationEntry::Flag(flag) => write!(f, "{}", flag),
             ConfigurationEntry::Pair(key, value) => write!(f, "{}={}", key, value),
+        }
+    }
+}
+
+impl ConfigurationEntry {
+    // Parses a single string to create a ConfigurationEntry
+    // with respect to the structure of the string.
+    fn new(value: &str) -> Self {
+        let expression = Regex::new(r".*=.*").unwrap();
+
+        if expression.is_match(value) {
+            let parts: Vec<&str> = value.split("=").collect();
+            ConfigurationEntry::Pair(
+                parts.get(0).unwrap().to_string(),
+                parts.get(1).unwrap().to_string(),
+            )
+        } else {
+            ConfigurationEntry::Flag(value.to_string())
         }
     }
 }
@@ -63,16 +83,9 @@ impl Configuration {
     }
     // Loads the default values into the struct vector
     fn use_default_configuration(&mut self) {
-        self.entries.push(ConfigurationEntry::Pair(
-            "*.js".to_string(),
-            "yellow".to_string(),
-        ));
-        self.entries.push(ConfigurationEntry::Pair(
-            "*.java".to_string(),
-            "orange".to_string(),
-        ));
-        self.entries
-            .push(ConfigurationEntry::Flag("no_permissions".to_string()));
+        self.entries.push(ConfigurationEntry::new("*.js=yellow"));
+        self.entries.push(ConfigurationEntry::new("*.java=orange"));
+        self.entries.push(ConfigurationEntry::new("no_permissions"));
     }
     // Safely reads the configuration file into this instance.
     fn load(&mut self) -> io::Result<()> {
