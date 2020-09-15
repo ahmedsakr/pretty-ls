@@ -51,15 +51,18 @@ impl Configuration {
             fs::create_dir(conf_dir).expect("Failed to initialize conf dir");
         }
 
-        // Adopt the default configuration if none exists
-        if !Path::new(&self.absolute_path).exists() {
-            self.load_default_configuration()
+        // Try to load the configuration file into this instance, otherwise
+        // defaulting to standard configuration.
+        if Path::new(&self.absolute_path).exists() {
+            self.load().expect("Unable to read config file");
+        } else {
+            self.use_default_configuration()
         }
 
         self
     }
     // Loads the default values into the struct vector
-    fn load_default_configuration(&mut self) {
+    fn use_default_configuration(&mut self) {
         self.entries.push(ConfigurationEntry::Pair(
             "*.js".to_string(),
             "yellow".to_string(),
@@ -70,6 +73,11 @@ impl Configuration {
         ));
         self.entries
             .push(ConfigurationEntry::Flag("no_permissions".to_string()));
+    }
+    // Safely reads the configuration file into this instance.
+    fn load(&mut self) -> io::Result<()> {
+        // To be implemented
+        Ok(())
     }
     // Write the configuration in memory into the configuration file.
     fn sync(&self) -> io::Result<()> {
