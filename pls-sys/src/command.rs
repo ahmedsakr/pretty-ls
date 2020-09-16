@@ -21,8 +21,8 @@ pub struct SystemCommand<'a> {
 impl<'a> SystemCommand<'a> {
     // Associated function to initialize a command with
     // no arguments.
-    pub fn new(name: &'a str) -> SystemCommand {
-        SystemCommand {
+    pub fn new(name: &'a str) -> Self {
+        Self {
             name,
             arguments: Vec::new(),
         }
@@ -51,16 +51,15 @@ impl<'a> SimpleCommand for SystemCommand<'a> {
             .output()
             .expect(&format!("Unable to execute {cmd}!", cmd = self.name));
 
-        match out.status.code() {
-            Some(0) => Ok(self
+        if let Some(0) = out.status.code() {
+            Ok(self
                 .parse_stdout(out.stdout)
-                .expect("Failed to parse stdout")),
-
-            // Everything that isn't a 0 return value is considered as a failure.
-            _ => Err(Error::new(
+                .expect("Failed to parse stdout"))
+        } else {
+            Err(Error::new(
                 ErrorKind::InvalidData,
                 format!("{cmd} failed", cmd = self.name),
-            )),
+            ))
         }
     }
     // Appends a string argument to the command chain.
