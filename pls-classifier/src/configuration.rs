@@ -32,6 +32,7 @@ impl ConfigurationEntry {
 
         if expression.is_match(value) {
             let parts: Vec<&str> = value.split("=").collect();
+
             ConfigurationEntry::Pair(
                 parts.get(0).unwrap().to_string(),
                 parts.get(1).unwrap().to_string(),
@@ -44,6 +45,7 @@ impl ConfigurationEntry {
 
 pub struct Configuration {
     absolute_path: String,
+    dirty: bool,
     entries: Vec<ConfigurationEntry>,
 }
 
@@ -55,6 +57,7 @@ impl Configuration {
     pub fn new() -> Self {
         let instance = Self {
             absolute_path: format!("{}/.pls/conf", env::var("HOME").unwrap()),
+            dirty: false,
             entries: Vec::new(),
         };
 
@@ -81,11 +84,19 @@ impl Configuration {
 
         self
     }
+    // Add a configuration entry to this current instance
+    pub fn add_entry(&mut self, entry: &str) {
+        self.entries.push(ConfigurationEntry::new(entry));
+
+        if !self.dirty {
+            self.dirty = true;
+        }
+    }
     // Loads the default values into the struct vector
     fn use_default_configuration(&mut self) {
-        self.entries.push(ConfigurationEntry::new("*.js=yellow"));
-        self.entries.push(ConfigurationEntry::new("*.java=orange"));
-        self.entries.push(ConfigurationEntry::new("no_permissions"));
+        self.add_entry("*.js=yellow");
+        self.add_entry("*.java=orange");
+        self.add_entry("no_permissions");
     }
     // Safely reads the configuration file into this instance.
     fn load(&mut self) -> io::Result<()> {
@@ -106,8 +117,11 @@ impl Configuration {
 }
 
 impl Drop for Configuration {
-    // Persist memory configuration to file before dropping.
+    // Before exiting, we need to persist the configuration settings if
+    // we have made changes in memory.
     fn drop(&mut self) {
-        self.sync().expect("Unable to sync configuration file");
+        if self.dirty {
+            self.sync().expect("Unable to sync configuration file");
+        }
     }
 }
