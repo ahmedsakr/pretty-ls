@@ -110,20 +110,25 @@ impl Configuration {
         // To be implemented
         Ok(())
     }
+    // Helper function for writing a whole line to a file
+    fn writeln(&self, file: &mut File, data: &str) -> io::Result<()> {
+        file.write(format!("{}\n", data).as_bytes())?;
+        Ok(())
+    }
     // Write the configuration in memory into the configuration file.
     fn sync(&self) -> io::Result<()> {
         let mut file = File::create(&self.absolute_path)?;
 
         // Section 1 is the colours for the provided regular expressions
-        file.write("[colours]\n".as_bytes())?;
-        for entry in self.entries.iter().filter(|entry| entry.is_pair()) {
-            file.write(format!("{}\n", entry).as_bytes())?;
+        self.writeln(&mut file, "[colours]")?;
+        for pair in self.entries.iter().filter(|entry| entry.is_pair()) {
+            self.writeln(&mut file, &pair.to_string())?;
         }
 
         // Section 2 is the flags for conditional behaviour
-        file.write("\n[flags]\n".as_bytes())?;
-        for entry in self.entries.iter().filter(|entry| !entry.is_pair()) {
-            file.write(format!("{}\n", entry).as_bytes())?;
+        self.writeln(&mut file, "\n[flags]")?;
+        for flag in self.entries.iter().filter(|entry| !entry.is_pair()) {
+            self.writeln(&mut file, &flag.to_string())?;
         }
 
         file.flush()
