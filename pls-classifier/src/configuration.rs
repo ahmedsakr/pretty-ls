@@ -41,6 +41,13 @@ impl ConfigurationEntry {
             ConfigurationEntry::Flag(value.to_string())
         }
     }
+    // Simple type check of this enum if it is ConfigurationEntry::Pair.
+    fn is_pair(&self) -> bool {
+        match self {
+            ConfigurationEntry::Pair(_, _) => true,
+            ConfigurationEntry::Flag(_) => false,
+        }
+    }
 }
 
 pub struct Configuration {
@@ -107,9 +114,16 @@ impl Configuration {
     fn sync(&self) -> io::Result<()> {
         let mut file = File::create(&self.absolute_path)?;
 
-        for entry in &self.entries {
-            file.write(entry.to_string().as_bytes())?;
-            file.write("\n".as_bytes())?;
+        // Section 1 is the colours for the provided regular expressions
+        file.write("[colours]\n".as_bytes())?;
+        for entry in self.entries.iter().filter(|entry| entry.is_pair()) {
+            file.write(format!("{}\n", entry).as_bytes())?;
+        }
+
+        // Section 2 is the flags for conditional behaviour
+        file.write("\n[flags]\n".as_bytes())?;
+        for entry in self.entries.iter().filter(|entry| !entry.is_pair()) {
+            file.write(format!("{}\n", entry).as_bytes())?;
         }
 
         file.flush()
