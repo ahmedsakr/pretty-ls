@@ -1,7 +1,7 @@
 use std::env;
 use std::fmt::{self, Display};
 use std::fs::{self, File};
-use std::io::{self, Write};
+use std::io::{self, BufRead, BufReader, Write};
 use std::ops::Drop;
 use std::path::Path;
 use std::string::ToString;
@@ -43,10 +43,7 @@ impl ConfigurationEntry {
     }
     // Simple type check of this enum if it is ConfigurationEntry::Pair.
     fn is_pair(&self) -> bool {
-        match self {
-            ConfigurationEntry::Pair(_, _) => true,
-            ConfigurationEntry::Flag(_) => false,
-        }
+        matches!(self, ConfigurationEntry::Pair(_, _))
     }
 }
 
@@ -94,24 +91,46 @@ impl Configuration {
     // Add a configuration entry to this current instance
     pub fn add_entry(&mut self, entry: &str) {
         self.entries.push(ConfigurationEntry::new(entry));
-
-        if !self.dirty {
-            self.dirty = true;
-        }
     }
     // Loads the default values into the struct vector
     fn use_default_configuration(&mut self) {
         self.add_entry("*.js=yellow");
         self.add_entry("*.java=orange");
         self.add_entry("no_permissions");
+
+        // We need to write the default config when we exit
+        self.dirty = true;
     }
-    // Safely reads the configuration file into this instance.
+    // Reads the entries from the configuration file into memory
     fn load(&mut self) -> io::Result<()> {
-        // To be implemented
+        let file = File::open(&self.absolute_path)?;
+        let mut reader = BufReader::new(file);
+        let mut line = String::new();
+        // pattern to ignore section headers in config file
+        let section_header = Regex::new(r".*\[.*\].*").unwrap();
+
+        loop {
+            match reader.read_line(&mut line)? {
+                // EOF reached
+                0 => break,
+                _ => {
+                    // remove newline feed character
+                    line.pop();
+
+                    // Weed out unimportant data from the file
+                    if line != "" && !section_header.is_match(&line) {
+                        self.add_entry(&line);
+                    }
+
+                    line.clear();
+                }
+            }
+        }
+
         Ok(())
     }
     // Helper function for writing a whole line to a file
-    fn writeln(&self, file: &mut File, data: &str) -> io::Result<()> {
+    fn file_writeln(&self, file: &mut File, data: &str) -> io::Result<()> {
         file.write(format!("{}\n", data).as_bytes())?;
         Ok(())
     }
@@ -120,15 +139,15 @@ impl Configuration {
         let mut file = File::create(&self.absolute_path)?;
 
         // Section 1 is the colours for the provided regular expressions
-        self.writeln(&mut file, "[colours]")?;
+        self.file_writeln(&mut file, "[colours]")?;
         for pair in self.entries.iter().filter(|entry| entry.is_pair()) {
-            self.writeln(&mut file, &pair.to_string())?;
+            self.file_writeln(&mut file, &pair.to_string())?;
         }
 
         // Section 2 is the flags for conditional behaviour
-        self.writeln(&mut file, "\n[flags]")?;
+        self.file_writeln(&mut file, "\n[flags]")?;
         for flag in self.entries.iter().filter(|entry| !entry.is_pair()) {
-            self.writeln(&mut file, &flag.to_string())?;
+            self.file_writeln(&mut file, &flag.to_string())?;
         }
 
         file.flush()
