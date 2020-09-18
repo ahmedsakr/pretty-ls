@@ -1,3 +1,5 @@
+use regex::Regex;
+use std::cmp::PartialEq;
 use std::env;
 use std::fmt::{self, Display};
 use std::fs::{self, File};
@@ -5,8 +7,6 @@ use std::io::{self, BufRead, BufReader, Write};
 use std::ops::Drop;
 use std::path::Path;
 use std::string::ToString;
-
-use regex::Regex;
 
 enum ConfigurationEntry {
     Pair(String, String),
@@ -16,11 +16,17 @@ enum ConfigurationEntry {
 impl Display for ConfigurationEntry {
     // Produces a string representation of ConfigurationEntry
     // that is suitable for storage in the configuration file.
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             ConfigurationEntry::Flag(flag) => write!(f, "{}", flag),
             ConfigurationEntry::Pair(key, value) => write!(f, "{}={}", key, value),
         }
+    }
+}
+
+impl PartialEq for ConfigurationEntry {
+    fn eq(&self, other: &Self) -> bool {
+        self.to_string() == other.to_string()
     }
 }
 
