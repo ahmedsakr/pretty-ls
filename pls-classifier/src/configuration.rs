@@ -74,6 +74,25 @@ impl Configuration {
         // Pull the configuration from the filesystem.
         instance.init()
     }
+    // Add a configuration entry to this current instance
+    pub fn add_entry(&mut self, entry: &str) {
+        self.entries.push(ConfigurationEntry::new(entry));
+    }
+    // Attempts to get the associated value for the provided key.
+    pub fn get_value(&self, key: &str) -> Result<Option<String>, regex::Error> {
+        for expr in self.entries.iter() {
+            match expr {
+                ConfigurationEntry::Pair(expr_key, value) => {
+                    if Regex::new(expr_key)?.is_match(key) {
+                        return Ok(Some(value.to_string()));
+                    }
+                }
+                _ => (),
+            }
+        }
+
+        Ok(None)
+    }
     // Probes the configuration directory and file before we can read
     // the data. If the configuration file does not exist, a default
     // configuration file is generated.
@@ -94,14 +113,10 @@ impl Configuration {
 
         self
     }
-    // Add a configuration entry to this current instance
-    pub fn add_entry(&mut self, entry: &str) {
-        self.entries.push(ConfigurationEntry::new(entry));
-    }
     // Loads the default values into the struct vector
     fn use_default_configuration(&mut self) {
-        self.add_entry("*.js=yellow");
-        self.add_entry("*.java=orange");
+        self.add_entry(".*\\.js$=yellow");
+        self.add_entry(".*\\.java$=orange");
         self.add_entry("no_permissions");
 
         // We need to write the default config when we exit

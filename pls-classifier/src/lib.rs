@@ -1,7 +1,7 @@
 mod configuration;
 mod lookup;
-use lookup::Lookup;
+pub use lookup::ConfigurationLookup;
 
-pub fn init() {
-    let _lookup = Lookup::new();
+pub fn init() -> ConfigurationLookup {
+    ConfigurationLookup::new()
 }
