@@ -34,15 +34,10 @@ impl ConfigurationEntry {
     // Parses a single string to create a ConfigurationEntry
     // with respect to the structure of the string.
     fn new(value: &str) -> Self {
-        let expression = Regex::new(r".*=.*").unwrap();
+        let parts: Vec<&str> = value.split("=").collect();
 
-        if expression.is_match(value) {
-            let parts: Vec<&str> = value.split("=").collect();
-
-            ConfigurationEntry::Pair(
-                parts.get(0).unwrap().to_string(),
-                parts.get(1).unwrap().to_string(),
-            )
+        if parts.len() >= 2 {
+            ConfigurationEntry::Pair(parts[0].to_string(), parts[1].to_string())
         } else {
             ConfigurationEntry::Flag(value.to_string())
         }

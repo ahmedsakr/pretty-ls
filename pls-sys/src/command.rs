@@ -65,8 +65,8 @@ impl<'a> SimpleCommand for SystemCommand<'a> {
     // Appends a string argument to the command chain.
     // If the argument is None, Nothing is done.
     fn add_argument(&mut self, arg: Option<String>) {
-        if arg.is_some() {
-            self.arguments.push(arg.unwrap());
+        if let Some(val) = arg {
+            self.arguments.push(val);
         }
     }
 }
