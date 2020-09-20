@@ -1,5 +1,4 @@
 use regex::Regex;
-use std::cmp::PartialEq;
 use std::env;
 use std::fmt::{self, Display};
 use std::fs::{self, File};
@@ -21,12 +20,6 @@ impl Display for ConfigurationEntry {
             ConfigurationEntry::Flag(flag) => write!(f, "{}", flag),
             ConfigurationEntry::Pair(key, value) => write!(f, "{}={}", key, value),
         }
-    }
-}
-
-impl PartialEq for ConfigurationEntry {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_string() == other.to_string()
     }
 }
 
@@ -74,12 +67,12 @@ impl Configuration {
         self.entries.push(ConfigurationEntry::new(entry));
     }
     // Attempts to get the associated value for the provided key.
-    pub fn get_value(&self, key: &str) -> Result<Option<String>, regex::Error> {
+    pub fn get_value(&self, key: &str) -> Result<Option<&str>, regex::Error> {
         for expr in self.entries.iter() {
             match expr {
                 ConfigurationEntry::Pair(expr_key, value) => {
                     if Regex::new(expr_key)?.is_match(key) {
-                        return Ok(Some(value.to_string()));
+                        return Ok(Some(value));
                     }
                 }
                 _ => (),
@@ -145,25 +138,20 @@ impl Configuration {
 
         Ok(())
     }
-    // Helper function for writing a whole line to a file
-    fn file_writeln(&self, file: &mut File, data: &str) -> io::Result<()> {
-        file.write(format!("{}\n", data).as_bytes())?;
-        Ok(())
-    }
     // Write the configuration in memory into the configuration file.
     fn sync(&self) -> io::Result<()> {
         let mut file = File::create(&self.absolute_path)?;
 
         // Section 1 is the colours for the provided regular expressions
-        self.file_writeln(&mut file, "[colours]")?;
+        file.write("[colours]\n".as_bytes())?;
         for pair in self.entries.iter().filter(|entry| entry.is_pair()) {
-            self.file_writeln(&mut file, &pair.to_string())?;
+            file.write(format!("{}\n", pair.to_string()).as_bytes())?;
         }
 
         // Section 2 is the flags for conditional behaviour
-        self.file_writeln(&mut file, "\n[flags]")?;
+        file.write("\n[flags]\n".as_bytes())?;
         for flag in self.entries.iter().filter(|entry| !entry.is_pair()) {
-            self.file_writeln(&mut file, &flag.to_string())?;
+            file.write(format!("{}\n", flag.to_string()).as_bytes())?;
         }
 
         file.flush()
