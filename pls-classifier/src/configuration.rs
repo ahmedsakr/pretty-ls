@@ -42,7 +42,7 @@ impl ConfigurationEntry {
 }
 
 pub struct Configuration {
-    absolute_path: String,
+    absolute_path: Option<String>,
     dirty: bool,
     entries: Vec<ConfigurationEntry>,
 }
@@ -54,7 +54,12 @@ impl Configuration {
     // will silent create the appropriate hierarchy with the default configuration.
     pub fn new() -> Self {
         let instance = Self {
-            absolute_path: format!("{}/.pls/conf", env::var("HOME").unwrap()),
+            // The HOME environment variable must be present for us to sync/load a configuration
+            // file.
+            absolute_path: match env::var("HOME") {
+                Ok(path) => Some(format!("{}/.pls/conf", path)),
+                Err(_) => None,
+            },
             dirty: false,
             entries: Vec::new(),
         };
@@ -69,13 +74,10 @@ impl Configuration {
     // Attempts to get the associated value for the provided key.
     pub fn get_value(&self, key: &str) -> Result<Option<&str>, regex::Error> {
         for expr in self.entries.iter() {
-            match expr {
-                ConfigurationEntry::Pair(expr_key, value) => {
-                    if Regex::new(expr_key)?.is_match(key) {
-                        return Ok(Some(value));
-                    }
+            if let ConfigurationEntry::Pair(expr_key, value) = expr {
+                if Regex::new(expr_key)?.is_match(key) {
+                    return Ok(Some(value));
                 }
-                _ => (),
             }
         }
 
@@ -85,17 +87,22 @@ impl Configuration {
     // the data. If the configuration file does not exist, a default
     // configuration file is generated.
     fn init(mut self) -> Self {
-        // Check for pls conf dir
-        let conf_dir = Path::new(&self.absolute_path).parent().unwrap();
-        if !conf_dir.exists() {
-            fs::create_dir(conf_dir).expect("Failed to initialize conf dir");
+        if let Some(config_path) = self.absolute_path.as_ref() {
+            // Check for pls conf dir
+            let conf_dir = Path::new(&config_path).parent().unwrap();
+            if !conf_dir.exists() {
+                fs::create_dir(conf_dir).expect("Failed to initialize conf dir");
+            }
+
+            // Try to load the configuration file into this instance
+            if Path::new(&config_path).exists() {
+                self.load().expect("Unable to read config file");
+            }
         }
 
-        // Try to load the configuration file into this instance, otherwise
-        // defaulting to standard configuration.
-        if Path::new(&self.absolute_path).exists() {
-            self.load().expect("Unable to read config file");
-        } else {
+        // If the config file doesn't exitst or it is empty, we will use
+        // default configuration.
+        if self.entries.is_empty() {
             self.use_default_configuration()
         }
 
@@ -112,7 +119,11 @@ impl Configuration {
     }
     // Reads the entries from the configuration file into memory
     fn load(&mut self) -> io::Result<()> {
-        let file = File::open(&self.absolute_path)?;
+        let file = File::open(
+            self.absolute_path
+                .as_ref()
+                .expect("load called with no config destination"),
+        )?;
         let mut reader = BufReader::new(file);
         let mut line = String::new();
         // pattern to ignore section headers in config file
@@ -140,7 +151,11 @@ impl Configuration {
     }
     // Write the configuration in memory into the configuration file.
     fn sync(&self) -> io::Result<()> {
-        let mut file = File::create(&self.absolute_path)?;
+        let mut file = File::create(
+            self.absolute_path
+                .as_ref()
+                .expect("sync called with no config destination"),
+        )?;
 
         // Section 1 is the colours for the provided regular expressions
         file.write("[colours]\n".as_bytes())?;
@@ -162,7 +177,7 @@ impl Drop for Configuration {
     // Before exiting, we need to persist the configuration settings if
     // we have made changes in memory.
     fn drop(&mut self) {
-        if self.dirty {
+        if self.absolute_path.is_some() && self.dirty {
             self.sync().expect("Unable to sync configuration file");
         }
     }
