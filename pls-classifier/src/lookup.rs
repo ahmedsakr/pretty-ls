@@ -17,12 +17,11 @@ impl ConfigurationLookup {
     }
     // Retrieves the color for the provided file name.
     pub fn get_color(&self, file: &str) -> &str {
-        match self.config.get_value(file) {
-            Ok(color) => color.unwrap_or(DEFAULT_COLOR),
-            Err(_) => {
-                println!("Invalid config rule for {}", file);
-                DEFAULT_COLOR
-            }
+        if let Ok(color) = self.config.get_value(file) {
+            return color.unwrap_or(DEFAULT_COLOR);
         }
+
+        println!("Invalid config rule for {}", file);
+        DEFAULT_COLOR
     }
 }

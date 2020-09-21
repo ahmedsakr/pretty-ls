@@ -129,22 +129,16 @@ impl Configuration {
         // pattern to ignore section headers in config file
         let section_header = Regex::new(r".*\[.*\].*").unwrap();
 
-        loop {
-            match reader.read_line(&mut line)? {
-                // EOF reached
-                0 => break,
-                _ => {
-                    // remove newline feed character
-                    line.pop();
+        while reader.read_line(&mut line)? > 0 {
+            // remove newline feed character
+            line.pop();
 
-                    // Weed out unimportant data from the file
-                    if line != "" && !section_header.is_match(&line) {
-                        self.add_entry(&line);
-                    }
-
-                    line.clear();
-                }
+            // Weed out unimportant data from the file
+            if line != "" && !section_header.is_match(&line) {
+                self.add_entry(&line);
             }
+
+            line.clear();
         }
 
         Ok(())
