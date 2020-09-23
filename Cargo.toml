@@ -17,3 +17,4 @@ members = [
 pls-args = { path = "./pls-args" }
 pls-sys = { path = "./pls-sys" }
 pls-classifier = { path = "./pls-classifier" }
+termion="1.5.5"

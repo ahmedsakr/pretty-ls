@@ -110,8 +110,11 @@ impl Configuration {
     }
     // Loads the default values into the struct vector
     fn use_default_configuration(&mut self) {
-        self.add_entry(".*\\.js$=yellow");
-        self.add_entry(".*\\.java$=orange");
+        self.add_entry(".*.js$=#ffff00");
+        self.add_entry(".*.java$=#efe232");
+        self.add_entry("Cargo.toml$=#ffa500");
+        self.add_entry("Cargo.lock$=#ffa500");
+        self.add_entry(".*.rs=#ffa500");
         self.add_entry("no_permissions");
 
         // We need to write the default config when we exit
