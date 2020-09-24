@@ -1,4 +1,4 @@
-use crate::configuration::Configuration;
+use crate::classifier::configuration::Configuration;
 use termion::color;
 
 pub struct ConfigurationLookup {

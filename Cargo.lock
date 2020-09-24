@@ -93,31 +93,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8f8bdf33df195859076e54ab11ee78a1b208382d3a26ec40d142ffc1ecc49ef"
 
 [[package]]
-name = "pls-args"
-version = "0.1.0"
-dependencies = [
- "structopt",
-]
-
-[[package]]
-name = "pls-classifier"
-version = "0.1.0"
-dependencies = [
- "regex",
- "termion",
-]
-
-[[package]]
-name = "pls-sys"
-version = "0.1.0"
-
-[[package]]
 name = "pretty-ls"
 version = "0.1.0"
 dependencies = [
- "pls-args",
- "pls-classifier",
- "pls-sys",
+ "regex",
+ "structopt",
  "termion",
 ]
 

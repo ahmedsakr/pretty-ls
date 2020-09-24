@@ -1,6 +1,6 @@
 use std::io;
 
-use crate::command::{self, SimpleCommand};
+use crate::sys::command::{self, SimpleCommand};
 
 // Lists the content of the current working directory
 pub fn list_dir(dir: Option<&String>) -> io::Result<Vec<String>> {
