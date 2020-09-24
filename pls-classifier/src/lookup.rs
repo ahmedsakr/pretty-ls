@@ -21,15 +21,13 @@ impl ConfigurationLookup {
     pub fn get_color(&self, file: &str) -> String {
         if let Ok(color) = self.config.get_value(file) {
             match color {
-                Some(hex) => {
-                    return str_to_rgb(hex).to_string();
-                }
-                None => return DEFAULT_RGB.to_string(),
+                Some(hex) => str_to_rgb(hex).to_string(),
+                None => DEFAULT_RGB.to_string(),
             }
+        } else {
+            println!("Invalid config rule for {}", file);
+            DEFAULT_RGB.to_string()
         }
-
-        println!("Invalid config rule for {}", file);
-        DEFAULT_RGB.to_string()
     }
 }
 

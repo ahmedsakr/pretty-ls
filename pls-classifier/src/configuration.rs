@@ -18,7 +18,12 @@ impl Display for ConfigurationEntry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             ConfigurationEntry::Flag(flag) => write!(f, "{}", flag),
-            ConfigurationEntry::Pair(key, value) => write!(f, "{}={}", key, value),
+            ConfigurationEntry::Pair(key, value) => write!(
+                f,
+                "{} = {}",
+                key.replace("\\", "").replace("$", "").replace(".*", "*"),
+                value
+            ),
         }
     }
 }
@@ -27,10 +32,17 @@ impl ConfigurationEntry {
     // Parses a single string to create a ConfigurationEntry
     // with respect to the structure of the string.
     fn new(value: &str) -> Self {
-        let parts: Vec<&str> = value.split("=").collect();
+        let config = value.to_string().replace(" ", "");
+        let parts: Vec<&str> = config.split("=").collect();
 
         if parts.len() >= 2 {
-            ConfigurationEntry::Pair(parts[0].to_string(), parts[1].to_string())
+            let mut key = parts[0].replace(".", "\\.").replace("*", ".*");
+            key.push('$');
+
+            ConfigurationEntry::Pair(
+                key,
+                parts[1].to_string(),
+            )
         } else {
             ConfigurationEntry::Flag(value.to_string())
         }
@@ -110,11 +122,10 @@ impl Configuration {
     }
     // Loads the default values into the struct vector
     fn use_default_configuration(&mut self) {
-        self.add_entry(".*.js$=#ffff00");
-        self.add_entry(".*.java$=#efe232");
-        self.add_entry("Cargo.toml$=#ffa500");
-        self.add_entry("Cargo.lock$=#ffa500");
-        self.add_entry(".*.rs=#ffa500");
+        self.add_entry("*.js = #ffff00");
+        self.add_entry("*.java = #efe232");
+        self.add_entry("Cargo.* = #ffa500");
+        self.add_entry("*.rs = #ffa500");
         self.add_entry("no_permissions");
 
         // We need to write the default config when we exit
