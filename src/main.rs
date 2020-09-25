@@ -1,6 +1,6 @@
-mod sys;
-mod classifier;
 mod args;
+mod classifier;
+mod sys;
 
 use args::RuntimeArguments;
 

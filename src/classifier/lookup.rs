@@ -1,6 +1,13 @@
 use crate::classifier::configuration::Configuration;
 use termion::color;
 
+// Wrapper for creating a termion::color struct
+macro_rules! color {
+    ($r:expr,$g:expr,$b:expr) => {
+        color::Fg(color::Rgb($r, $g, $b))
+    };
+}
+
 pub struct ConfigurationLookup {
     config: Configuration,
 }
@@ -8,7 +15,7 @@ pub struct ConfigurationLookup {
 // Default color for a file that doesn't have a valid configuration
 // rule.
 const DEFAULT_COLOR: [u8; 3] = [200, 200, 200];
-const DEFAULT_RGB: color::Fg<color::Rgb> = color::Fg(color::Rgb(200, 200, 200));
+const DEFAULT_RGB: color::Fg<color::Rgb> = color!(200, 200, 200);
 
 impl ConfigurationLookup {
     // Constructor for the ConfigurationLookup struct
@@ -59,5 +66,5 @@ fn str_to_rgb(input: &str) -> color::Fg<color::Rgb> {
         }
     }
 
-    color::Fg(color::Rgb(rgb[0], rgb[1], rgb[2]))
+    color!(rgb[0], rgb[1], rgb[2])
 }

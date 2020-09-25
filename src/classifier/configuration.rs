@@ -39,10 +39,7 @@ impl ConfigurationEntry {
             let mut key = parts[0].replace(".", "\\.").replace("*", ".*");
             key.push('$');
 
-            ConfigurationEntry::Pair(
-                key,
-                parts[1].to_string(),
-            )
+            ConfigurationEntry::Pair(key, parts[1].to_string())
         } else {
             ConfigurationEntry::Flag(value.to_string())
         }
