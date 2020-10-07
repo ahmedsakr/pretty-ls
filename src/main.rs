@@ -9,8 +9,6 @@ fn main() {
     let classifier = classifier::init();
 
     let opt = RuntimeArguments::gather();
-    println!("Debug mode: {}", opt.is_debug());
-
     let output = sys::list_dir(opt.directory()).expect("Unable to list directory files");
 
     for file in &output {

@@ -1,5 +1,5 @@
 [package]
-name = "pretty-ls"
+name = "pls"
 version = "0.1.0"
 authors = ["Ahmed Sakr <ahmed@sakr.ca>"]
 edition = "2018"

@@ -16,6 +16,7 @@ impl RuntimeArguments {
     }
 
     // User specified debug mode
+    #[allow(dead_code)]
     pub fn is_debug(&self) -> bool {
         self.options.debug
     }
